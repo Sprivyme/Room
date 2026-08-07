@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room</title>
+<style>
+:root{
+  --bg: #ffffff;
+  --surface: #faf9f7;
+  --border: #e7e2d8;
+  --text-primary: #201c16;
+  --text-secondary: #8f867a;
+  --accent: #c4a574;
+  --radius: 14px;
+  --shadow-sm: 0 1px 2px rgba(32,28,22,0.04);
+  --shadow-md: 0 4px 20px rgba(32,28,22,0.08);
+  --shadow-lg: 0 12px 40px rgba(32,28,22,0.12);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+header{
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 28px;
+  border-bottom:1px solid var(--border);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand{ display:flex; align-items:center; gap:10px; cursor: pointer; }
+.brand-mark{
+  width:22px; height:22px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at center, var(--bg) 0 3px, transparent 3px),
+    repeating-radial-gradient(circle at center, #161412 0 2px, #2b2822 2px 4px);
+  flex-shrink:0;
+  transition: transform 0.3s ease;
+}
+.brand:hover .brand-mark{ transform: rotate(180deg); }
+.brand-name{ font-size:16px; font-weight:700; letter-spacing:0.2px; }
+
+.header-actions{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Buttons */
+.btn{
+  display:flex; align-items:center; gap:6px;
+  height:36px; padding: 0 16px; border-radius:18px;
+  font-size:13px; font-weight:600; border:none; cursor:pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.btn-text{
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-text:hover{ background: var(--surface); border-color: var(--text-secondary); }
+.btn-primary{
+  background: var(--text-primary); color:#fff;
+}
+.btn-primary:hover{ opacity:.88; transform: translateY(-1px); }
+input[type="file"]{ display:none; }
+
+/* Toast */
+.toast{
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--text-primary);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  z-index: 200;
+  box-shadow: var(--shadow-md);
+}
+.toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Main */
+main{
+  min-height: calc(100vh - 64px);
+  padding: 32px 28px;
+}
+
+/* Enter / Login State */
+.enter-panel{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 128px);
+  max-width: 400px;
+  margin: 0 auto;
+  animation: fadeIn 0.6s ease;
+}
+.enter-title{
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.enter-desc{
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+.key-input-group{
+  width: 100%;
+  margin-bottom: 16px;
+}
+.key-input{
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  font-size: 15px;
+  font-family: 'SF Mono', Monaco, monospace;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color 0.2s ease;
+  color: var(--text-primary);
+  background: var(--bg);
+}
+.key-input:focus{ border-color: var(--accent); }
+.key-input::placeholder{ color: var(--text-secondary); opacity: 0.5; text-transform: none; font-family: inherit; letter-spacing: 0; }
+.enter-actions{
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.enter-actions .btn{ flex: 1; justify-content: center; }
+.enter-divider{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 20px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.enter-divider::before,
+.enter-divider::after{
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.enter-links{
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+}
+.enter-link{
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+}
+.enter-link:hover{ color: var(--text-primary); }
+
+/* Empty State */
+.empty-state{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 128px);
+  text-align: center;
+  animation: fadeIn 0.6s ease;
+}
+.empty-illustration{
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  position: relative;
+}
+.empty-illustration::before{
+  content: '';
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  position: absolute;
+}
+.empty-illustration::after{
+  content: '';
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--border);
+  position: absolute;
+}
+.empty-state h2{
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.empty-state p{
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  max-width: 320px;
+}
+.empty-hint{
+  margin-top: 24px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Collection */
+.collection-header{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  animation: fadeIn 0.4s ease;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.collection-title{
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.collection-meta{
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.vinyl-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 24px;
+  animation: fadeIn 0.5s ease;
+}
+@media (max-width: 640px){
+  .vinyl-grid{ grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  main{ padding: 20px 16px; }
+  header{ padding: 0 16px; }
+}
+
+/* Vinyl Card */
+.vinyl-card{
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.vinyl-card:hover{ transform: translateY(-4px); }
+.vinyl-cover-wrap{
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.3s ease;
+}
+.vinyl-card:hover .vinyl-cover-wrap{
+  box-shadow: var(--shadow-lg);
+}
+.vinyl-sleeve-bg{
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, #e7e2d8, #d5cfc4);
+  z-index: 1;
+}
+.vinyl-cover{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius);
+  z-index: 2;
+  transition: transform 0.5s ease;
+}
+.vinyl-card:hover .vinyl-cover{ transform: scale(1.03); }
+
+/* Vinyl disc (slides out of the sleeve) */
+.vinyl-disc{
+  position: absolute;
+  top: 8%;
+  left: 6%;
+  width: 84%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center, #171411 0 2px, #262119 2px 4px);
+  box-shadow: 0 2px 14px rgba(32,28,22,0.28);
+  z-index: 0;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.vinyl-card:hover .vinyl-disc{
+  transform: translateX(22%) rotate(10deg);
+}
+.vinyl-disc-label{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34%;
+  height: 34%;
+  border-radius: 50%;
+  background: var(--border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+}
+.vinyl-disc-label::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16%;
+  height: 16%;
+  border-radius: 50%;
+  background: var(--bg);
+}
+.vinyl-shine{
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%, rgba(0,0,0,0.05) 100%);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+}
+.vinyl-card:hover .vinyl-shine{ opacity: 1; }
+.vinyl-label{
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.3), transparent 60%);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.vinyl-card:hover .vinyl-label{ opacity: 0.6; }
+.vinyl-info{
+  margin-top: 12px;
+  padding: 0 2px;
+}
+.vinyl-title{
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vinyl-owner{
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vinyl-date{
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* Modal */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(32,28,22,0.25);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.modal-overlay.active{ opacity: 1; pointer-events: all; }
+.modal{
+  background: var(--bg);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 440px;
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(12px) scale(0.96);
+  transition: transform 0.3s ease;
+  border: 1px solid var(--border);
+}
+.modal-overlay.active .modal{
+  transform: translateY(0) scale(1);
+}
+.modal-title{
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.modal-desc{
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+.key-display{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  user-select: all;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  word-break: break-all;
+}
+.key-display:hover{
+  border-color: var(--accent);
+  background: #fff8f0;
+}
+.key-hint{
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 20px;
+}
+.modal-actions{
+  display: flex;
+  gap: 10px;
+}
+.modal-btn{
+  flex: 1;
+  height: 40px;
+  border-radius: 20px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.modal-btn-primary{
+  background: var(--text-primary);
+  color: #fff;
+}
+.modal-btn-primary:hover{ opacity: 0.88; }
+.modal-btn-secondary{
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.modal-btn-secondary:hover{ background: var(--surface); }
+.modal-btn-danger{
+  flex: none;
+  padding: 0 20px;
+  background: transparent;
+  color: #c0392b;
+  border: 1px solid #f0d0cc;
+}
+.modal-btn-danger:hover{ background: #fdf1f0; }
+.modal-btn-danger[data-confirming="1"]{
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+.detail-footer{
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+
+/* Detail Modal */
+.detail-modal{
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 0;
+}
+.detail-header{
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  background: var(--surface);
+}
+.detail-header img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.detail-header::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 50%, rgba(32,28,22,0.6) 100%);
+  z-index: 1;
+}
+/* Detail: record pulls out of the sleeve */
+.detail-disc{
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 64%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center, #171411 0 2px, #262119 2px 4px);
+  box-shadow: -6px 0 30px rgba(0,0,0,0.35);
+  transform: translate(108%, -50%);
+  z-index: 2;
+}
+.modal-overlay.active .detail-disc{
+  animation: discPullOut 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s forwards;
+}
+.detail-disc-inner{
+  width: 100%;
+  height: 100%;
+  position: relative;
+  animation: discSpin 8s linear 1.2s infinite;
+}
+.detail-disc-label{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: var(--border);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+}
+.detail-disc-label::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16%;
+  height: 16%;
+  border-radius: 50%;
+  background: var(--bg);
+}
+@keyframes discPullOut{
+  from{ transform: translate(108%, -50%); }
+  to{ transform: translate(46%, -50%); }
+}
+@keyframes discSpin{
+  to{ transform: rotate(360deg); }
+}
+.detail-close{
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  z-index: 10;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.detail-close:hover{ background: #fff; transform: rotate(90deg); }
+.detail-body{
+  padding: 24px 28px 28px;
+}
+.detail-title{
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.detail-owner{
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.detail-date{
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  margin-bottom: 24px;
+}
+.detail-section-title{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.side-section{
+  margin-bottom: 24px;
+}
+.side-section:last-child{
+  margin-bottom: 0;
+}
+.side-label{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+.side-label::before{
+  content: '';
+  width: 4px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.side-b .side-label::before{
+  background: var(--text-secondary);
+}
+.track-list{
+  list-style: none;
+}
+.track-item{
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.track-item:last-child{ border-bottom: none; }
+.track-number{
+  color: var(--text-secondary);
+  width: 28px;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.track-name{
+  flex: 1;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.track-artist{
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-left: 8px;
+}
+.track-artist::before{ content: '· '; }
+.track-duration{
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  margin-left: 12px;
+  flex-shrink: 0;
+}
+
+/* Key Management Tabs */
+.key-tabs{
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  background: var(--surface);
+  border-radius: 12px;
+}
+.key-tab{
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.key-tab.active{
+  background: var(--bg);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+.key-tab:hover:not(.active){
+  color: var(--text-primary);
+}
+
+/* Countdown */
+.countdown{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 2px;
+}
+.countdown-label{
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+/* Visitor Badge */
+.visitor-badge{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: #fff8f0;
+  border: 1px solid #f0e0cc;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.visitor-badge::before{
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+/* User badge */
+.user-badge{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Key type label */
+.key-type-label{
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.key-type-master{ background: #e8f0e8; color: #5a7d5a; }
+.key-type-sub{ background: #e8e8f0; color: #5a5a7d; }
+.key-type-backup{ background: #fff8f0; color: #8a6d4b; }
+
+/* Animations */
+@keyframes fadeIn{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse{
+  0%, 100%{ opacity: 1; }
+  50%{ opacity: 0.4; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{ width: 6px; }
+::-webkit-scrollbar-track{ background: transparent; }
+::-webkit-scrollbar-thumb{ background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand" onclick="goHome()">
+    <div class="brand-mark"></div>
+    <div class="brand-name">Room</div>
+  </div>
+  <div class="header-actions" id="headerActions"></div>
+</header>
+
+<main id="main"></main>
+
+<div class="toast" id="toast"></div>
+
+<!-- Key Management Modal -->
+<div class="modal-overlay" id="keyModal" onclick="closeModal(event, 'keyModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">钥匙管理</div>
+    <div class="modal-desc">管理你的主钥匙、副钥匙和备用钥匙</div>
+
+    <div class="key-tabs">
+      <button class="key-tab active" onclick="switchKeyTab('master')" id="tabMaster">主钥匙</button>
+      <button class="key-tab" onclick="switchKeyTab('sub')" id="tabSub">副钥匙</button>
+      <button class="key-tab" onclick="switchKeyTab('backup')" id="tabBackup">备用钥匙</button>
+    </div>
+
+    <div id="keyTabContent"></div>
+  </div>
+</div>
+
+<!-- Enter Key Modal (for visitor or master login) -->
+<div class="modal-overlay" id="enterModal" onclick="closeModal(event, 'enterModal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">进入房间</div>
+    <div class="modal-desc">输入副钥匙进入好友的房间，或输入主钥匙进入自己的房间</div>
+    <div class="key-input-group">
+      <input type="text" class="key-input" id="enterKeyInput" placeholder="输入 KEY CODE" maxlength="20">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('enterModal')">取消</button>
+      <button class="modal-btn modal-btn-primary" onclick="submitEnterKey()">进入</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event, 'detailModal')">
+  <div class="modal detail-modal" onclick="event.stopPropagation()">
+    <div class="detail-header" id="detailHeader">
+      <img src="" alt="" id="detailImg" onerror="this.style.display='none'; this.parentElement.style.background='linear-gradient(135deg, #e7e2d8, #d5cfc4)'">
+      <div class="detail-disc">
+        <div class="detail-disc-inner">
+          <div class="detail-disc-label" id="detailDiscLabel"></div>
+        </div>
+      </div>
+      <button class="detail-close" onclick="closeModalDirect('detailModal')">&times;</button>
+    </div>
+    <div class="detail-body" id="detailBody"></div>
+  </div>
+</div>
+
+<script>
+// ========== State ==========
+let state = {
+  view: 'enter', // 'enter', 'collection', 'visitor'
+  masterKey: localStorage.getItem('room_master_key') || null,
+  records: [],
+  backupKey: localStorage.getItem('room_backup_key') || null,
+  backupCreatedAt: parseInt(localStorage.getItem('room_backup_created_at') || '0', 10) || null,
+  visitorKey: null,
+  subKey: localStorage.getItem('room_sub_key') || null
+};
+
+// ========== Storage ==========
+// 收藏按主钥匙隔离存储，不同钥匙互不串数据
+function recordsKey(){
+  return 'room_records_' + (state.masterKey || 'room');
+}
+
+function loadRecords(){
+  const key = recordsKey();
+  try{
+    let raw = localStorage.getItem(key);
+    if(raw === null && state.masterKey){
+      // 迁移旧版单仓库数据（升级前所有钥匙共用 room_records）
+      const legacy = localStorage.getItem('room_records');
+      if(legacy !== null){
+        localStorage.setItem(key, legacy);
+        raw = legacy;
+      }
+    }
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+
+function saveRecords(){
+  try{ localStorage.setItem(recordsKey(), JSON.stringify(state.records)); }catch(e){}
+}
+
+// ========== Init ==========
+function init(){
+  // 防御性清理：旧版本可能把 "null" 字符串写进 localStorage
+  if(state.masterKey === 'null' || state.masterKey === 'undefined'){
+    state.masterKey = null;
+    localStorage.removeItem('room_master_key');
+  }
+  // 备用钥匙已过 24h 且当前无主钥匙 → 自动提升为新的主钥匙
+  if(state.backupKey && !state.masterKey && getBackupRemaining() <= 0){
+    state.masterKey = state.backupKey;
+    state.backupKey = null;
+    state.backupCreatedAt = null;
+    localStorage.setItem('room_master_key', state.masterKey);
+    localStorage.removeItem('room_backup_key');
+    localStorage.removeItem('room_backup_created_at');
+  }
+  if(state.masterKey){
+    state.view = 'collection';
+    state.records = loadRecords();
+  }
+  render();
+}
+
+function goHome(){
+  if(state.view === 'visitor'){
+    state.view = 'enter';
+    state.visitorKey = null;
+    state.records = [];
+  }
+  render();
+}
+
+// ========== Render ==========
+function render(){
+  renderHeader();
+  renderMain();
+}
+
+function renderHeader(){
+  const actions = document.getElementById('headerActions');
+
+  if(state.view === 'enter'){
+    actions.innerHTML = `
+      <button class="btn btn-text" onclick="showEnterModal()">进入房间</button>
+    `;
+  } else if(state.view === 'visitor'){
+    actions.innerHTML = `
+      <div class="visitor-badge">访客模式</div>
+      <button class="btn btn-text" onclick="goHome()">退出</button>
+    `;
+  } else {
+    actions.innerHTML = `
+      <button class="btn btn-text" onclick="showKeyModal()">钥匙</button>
+      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+        <span>导入 .ylp</span>
+      </button>
+      <input type="file" id="fileInput" accept=".ylp,.json,.zip,.png,.jpg,.jpeg,.webp,application/json,image/*" multiple onchange="handleFileImport(event)">
+    `;
+  }
+}
+
+function renderMain(){
+  const main = document.getElementById('main');
+
+  if(state.view === 'enter'){
+    main.innerHTML = `
+      <div class="enter-panel">
+        <div class="empty-illustration" style="margin-bottom: 32px;"></div>
+        <div class="enter-title">进入你的房间</div>
+        <div class="enter-desc">输入主钥匙查看你的黑胶收藏，或创建一个新的房间</div>
+
+        <div class="key-input-group">
+          <input type="text" class="key-input" id="masterKeyInput" placeholder="输入主钥匙" maxlength="20" value="${state.masterKey || ''}">
+        </div>
+        <div class="enter-actions">
+          <button class="btn btn-primary" onclick="loginWithMasterKey()" style="flex: 2;">进入房间</button>
+          <button class="btn btn-text" onclick="createMasterKey()" style="flex: 1;">创建新钥匙</button>
+        </div>
+
+        <div class="enter-divider">或</div>
+
+        <div style="width: 100%; margin-bottom: 16px;">
+          <input type="text" class="key-input" id="subKeyInput" placeholder="输入副钥匙进入好友房间" maxlength="20">
+        </div>
+        <button class="btn btn-text" onclick="enterWithSubKey()" style="width: 100%; justify-content: center;">进入好友房间</button>
+
+        <div class="enter-links" style="margin-top: 24px;">
+          <button class="enter-link" onclick="showKeyModal()">钥匙管理</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if(state.records.length === 0){
+    const isVisitor = state.view === 'visitor';
+    main.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-illustration"></div>
+        <h2>${isVisitor ? '这个房间还是空的' : '你的房间还是空的'}</h2>
+        <p>${isVisitor ? '房主还没有上架任何唱片。' : '导入 .ylp 文件，开始搭建你的黑胶唱片墙。'}</p>
+        ${isVisitor ? '' : `
+        <div class="empty-hint">
+          点击右上角「导入 .ylp」或拖拽文件到页面<br>
+          支持导入 .zip：.ylp 会自动配对同名 .png 或 Cover.png 作为封面
+        </div>`}
+      </div>
+    `;
+    return;
+  }
+
+  const title = state.view === 'visitor' ? '好友的房间' : '我的收藏';
+  const meta = state.view === 'visitor' 
+    ? `正在浏览 · ${state.records.length} 张唱片` 
+    : `${state.records.length} 张唱片`;
+
+  main.innerHTML = `
+    <div class="collection-header">
+      <h1 class="collection-title">
+        ${title}
+        ${state.view === 'visitor' ? '<span class="visitor-badge">访客模式</span>' : '<span class="user-badge">主钥匙: ' + maskKey(state.masterKey) + '</span>'}
+      </h1>
+      <span class="collection-meta">${meta}</span>
+    </div>
+    <div class="vinyl-grid">
+      ${state.records.map((rec, idx) => `
+        <div class="vinyl-card" onclick="showDetail(${idx})" style="animation: fadeIn 0.4s ease ${idx * 0.05}s both;">
+          <div class="vinyl-cover-wrap">
+            <div class="vinyl-disc">
+              <div class="vinyl-disc-label" style="background: ${stringToColor(rec.owner)};"></div>
+            </div>
+            <div class="vinyl-sleeve-bg"></div>
+            <img class="vinyl-cover" src="${esc(rec.cover)}" alt="${esc(rec.title)}" loading="lazy" onerror="this.style.display='none'">
+            <div class="vinyl-shine"></div>
+          </div>
+          <div class="vinyl-info">
+            <div class="vinyl-title">${esc(rec.title)}</div>
+            <div class="vinyl-owner">${esc(rec.owner)}</div>
+            <div class="vinyl-date">${esc(formatDate(rec.created_at))}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ========== Key Management ==========
+function showKeyModal(){
+  document.getElementById('keyModal').classList.add('active');
+  switchKeyTab('master');
+}
+
+function switchKeyTab(type){
+  document.querySelectorAll('.key-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active');
+
+  const content = document.getElementById('keyTabContent');
+
+  if(type === 'master'){
+    const hasKey = !!state.masterKey;
+    content.innerHTML = `
+      <div style="text-align: center;">
+        <span class="key-type-label key-type-master">主钥匙</span>
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+          主钥匙是你进入自己房间的唯一凭证。<br>请妥善保管，不要分享给他人。
+        </div>
+        ${hasKey ? `
+          <div class="key-display" onclick="copyToClipboard('${state.masterKey}')">${state.masterKey}</div>
+          <div class="key-hint">点击复制 · 这是你当前的主钥匙</div>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('keyModal')">关闭</button>
+            <button class="modal-btn modal-btn-primary" onclick="logout()">退出房间</button>
+          </div>
+        ` : `
+          <div style="padding: 24px; background: var(--surface); border-radius: var(--radius); margin-bottom: 20px;">
+            <div style="font-size: 14px; color: var(--text-secondary);">你还没有主钥匙</div>
+          </div>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('keyModal')">关闭</button>
+            <button class="modal-btn modal-btn-primary" onclick="createMasterKeyFromModal()">创建主钥匙</button>
+          </div>
+        `}
+      </div>
+    `;
+  } else if(type === 'sub'){
+    // 副钥匙固定不变，首次生成后持久化，方便多次分发给好友
+    if(!state.subKey){
+      state.subKey = generateKey('SUB');
+      localStorage.setItem('room_sub_key', state.subKey);
+    }
+    const subKey = state.subKey;
+    content.innerHTML = `
+      <div style="text-align: center;">
+        <span class="key-type-label key-type-sub">副钥匙</span>
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+          将副钥匙分发给好友，他们可以通过此钥匙进入你的房间查看收藏。
+        </div>
+        <div class="key-display" onclick="copyToClipboard('${subKey}')">${subKey}</div>
+        <div class="key-hint">点击复制 · 副钥匙长期有效</div>
+        <div class="modal-actions">
+          <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('keyModal')">关闭</button>
+          <button class="modal-btn modal-btn-primary" onclick="copyToClipboard('${subKey}')">复制副钥匙</button>
+        </div>
+      </div>
+    `;
+  } else if(type === 'backup'){
+    if(state.backupKey){
+      const remaining = getBackupRemaining();
+      if(remaining > 0){
+        const hours = Math.floor(remaining / 3600);
+        const mins = Math.floor((remaining % 3600) / 60);
+        const secs = remaining % 60;
+        content.innerHTML = `
+          <div style="text-align: center;">
+            <span class="key-type-label key-type-backup">备用钥匙</span>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+              备用钥匙将在 24 小时后自动成为主钥匙。<br>当前主钥匙将失效。
+            </div>
+            <div class="key-display" style="font-size: 18px; margin-bottom: 8px;">${state.backupKey}</div>
+            <div class="countdown" id="backupCountdown">
+              ${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}
+            </div>
+            <div class="countdown-label">剩余时间</div>
+            <div class="modal-actions">
+              <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('keyModal')">关闭</button>
+              <button class="modal-btn modal-btn-primary" onclick="copyToClipboard('${state.backupKey}')">复制备用钥匙</button>
+            </div>
+          </div>
+        `;
+        startBackupCountdown();
+      } else {
+        if(!state.backupKey) return;
+        state.masterKey = state.backupKey;
+        state.backupKey = null;
+        state.backupCreatedAt = null;
+        localStorage.setItem('room_master_key', state.masterKey);
+        localStorage.removeItem('room_backup_key');
+        localStorage.removeItem('room_backup_created_at');
+        showToast('备用钥匙已生效，成为新的主钥匙');
+        switchKeyTab('backup');
+      }
+    } else {
+      content.innerHTML = `
+        <div style="text-align: center;">
+          <span class="key-type-label key-type-backup">备用钥匙</span>
+          <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6;">
+            如果你丢失了主钥匙，可以生成备用钥匙。<br>24 小时后，备用钥匙将自动成为主钥匙。
+          </div>
+          <div style="padding: 24px; background: var(--surface); border-radius: var(--radius); margin-bottom: 20px;">
+            <div style="font-size: 14px; color: var(--text-secondary);">尚未生成备用钥匙</div>
+          </div>
+          <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeModalDirect('keyModal')">关闭</button>
+            <button class="modal-btn modal-btn-primary" onclick="generateBackupKey()">生成备用钥匙</button>
+          </div>
+        </div>
+      `;
+    }
+  }
+}
+
+let backupTimer = null;
+function startBackupCountdown(){
+  if(backupTimer) clearInterval(backupTimer);
+  backupTimer = setInterval(() => {
+    const remaining = getBackupRemaining();
+    if(remaining <= 0){
+      clearInterval(backupTimer);
+      backupTimer = null;
+      if(!state.backupKey) return;
+      state.masterKey = state.backupKey;
+      state.backupKey = null;
+      state.backupCreatedAt = null;
+      localStorage.setItem('room_master_key', state.masterKey);
+      localStorage.removeItem('room_backup_key');
+      localStorage.removeItem('room_backup_created_at');
+      switchKeyTab('backup');
+      if(state.view === 'collection'){
+        render();
+        showToast('备用钥匙已生效');
+      }
+      return;
+    }
+    const el = document.getElementById('backupCountdown');
+    if(el){
+      const hours = Math.floor(remaining / 3600);
+      const mins = Math.floor((remaining % 3600) / 60);
+      const secs = remaining % 60;
+      el.textContent = `${String(hours).padStart(2,'0')}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    }
+  }, 1000);
+}
+
+function getBackupRemaining(){
+  if(!state.backupCreatedAt) return 0;
+  const elapsed = Math.floor((Date.now() - state.backupCreatedAt) / 1000);
+  return Math.max(0, 24 * 3600 - elapsed);
+}
+
+function generateBackupKey(){
+  state.backupKey = generateKey('BACKUP');
+  state.backupCreatedAt = Date.now();
+  localStorage.setItem('room_backup_key', state.backupKey);
+  localStorage.setItem('room_backup_created_at', String(state.backupCreatedAt));
+  showToast('备用钥匙已生成');
+  switchKeyTab('backup');
+}
+
+function createMasterKey(){
+  const key = generateKey('MASTER');
+  state.masterKey = key;
+  localStorage.setItem('room_master_key', key);
+  state.view = 'collection';
+  state.records = [];
+  showToast('主钥匙已创建，请妥善保管');
+  render();
+}
+
+function createMasterKeyFromModal(){
+  createMasterKey();
+  closeModalDirect('keyModal');
+}
+
+function loginWithMasterKey(){
+  const input = document.getElementById('masterKeyInput').value.trim().toUpperCase();
+  if(!input){
+    showToast('请输入主钥匙');
+    return;
+  }
+  if(state.masterKey && input !== state.masterKey){
+    showToast('主钥匙错误');
+    return;
+  }
+  state.masterKey = input;
+  localStorage.setItem('room_master_key', input);
+  state.view = 'collection';
+  state.records = loadRecords();
+  showToast('欢迎回来');
+  render();
+}
+
+function logout(){
+  state.masterKey = null;
+  localStorage.removeItem('room_master_key');
+  state.records = [];
+  state.view = 'enter';
+  closeModalDirect('keyModal');
+  showToast('已退出房间');
+  render();
+}
+
+// ========== Enter / Visitor ==========
+function showEnterModal(){
+  document.getElementById('enterModal').classList.add('active');
+  setTimeout(() => document.getElementById('enterKeyInput').focus(), 100);
+}
+
+function submitEnterKey(){
+  const key = document.getElementById('enterKeyInput').value.trim().toUpperCase();
+  if(!key){
+    showToast('请输入 KEY CODE');
+    return;
+  }
+  enterWithKey(key);
+}
+
+function enterWithSubKey(){
+  const key = document.getElementById('subKeyInput').value.trim().toUpperCase();
+  if(!key){
+    showToast('请输入副钥匙');
+    return;
+  }
+  enterWithKey(key);
+}
+
+// 钥匙格式：ROOM-类型-6位随机码（生成时字符集不含 I/O/0/1）
+const KEY_MASTER = /^ROOM-MASTER-[A-Z0-9]{6}$/i;
+const KEY_SUB    = /^ROOM-SUB-[A-Z0-9]{6}$/i;
+const KEY_BACKUP = /^ROOM-BACKUP-[A-Z0-9]{6}$/i;
+
+function enterWithKey(key){
+  if(state.masterKey && key === state.masterKey){
+    // 与当前主钥匙完全一致（含自定义格式）→ 直接进入自己的房间
+    state.view = 'collection';
+    state.records = loadRecords();
+    showToast('已进入你的房间');
+  } else if(KEY_MASTER.test(key)){
+    if(state.masterKey && state.masterKey !== key){
+      showToast('钥匙与当前主钥匙不匹配');
+      return;
+    }
+    state.masterKey = key;
+    localStorage.setItem('room_master_key', key);
+    state.view = 'collection';
+    state.records = loadRecords();
+    showToast('已进入你的房间');
+  } else if(KEY_BACKUP.test(key)){
+    if(state.masterKey){
+      showToast('你已有主钥匙，无需使用备用钥匙');
+      return;
+    }
+    // 备用钥匙立即生效为新的主钥匙
+    state.masterKey = key;
+    localStorage.setItem('room_master_key', key);
+    state.backupKey = null;
+    state.backupCreatedAt = null;
+    localStorage.removeItem('room_backup_key');
+    localStorage.removeItem('room_backup_created_at');
+    state.view = 'collection';
+    state.records = loadRecords();
+    showToast('备用钥匙已生效，成为新的主钥匙');
+  } else if(KEY_SUB.test(key)){
+    state.visitorKey = key;
+    state.view = 'visitor';
+    state.records = [];
+    showToast('已进入好友的房间');
+  } else {
+    showToast('无效的钥匙格式');
+    return;
+  }
+  closeModalDirect('enterModal');
+  render();
+}
+
+// ========== File Import ==========
+function baseName(n){ return n.replace(/\.[^.]+$/, ''); }
+
+// 极简 zip 解压器：从中央目录读取条目，支持 stored / deflate
+async function unzipFiles(zipFile){
+  const buf = new Uint8Array(await zipFile.arrayBuffer());
+  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const u16 = (o) => view.getUint16(o, true);
+  const u32 = (o) => view.getUint32(o, true);
+
+  // 从尾部定位 EOCD（End of Central Directory）
+  let eocd = -1;
+  for(let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 65536); i--){
+    if(u32(i) === 0x06054b50){ eocd = i; break; }
+  }
+  if(eocd < 0) throw new Error('invalid zip');
+
+  const count = u16(eocd + 10);
+  let p = u32(eocd + 16); // 中央目录起始偏移
+  const decoder = new TextDecoder();
+  const out = [];
+
+  for(let n = 0; n < count; n++){
+    if(u32(p) !== 0x02014b50) break;
+    const method = u16(p + 10);
+    const compSize = u32(p + 20);
+    const nameLen = u16(p + 28);
+    const extraLen = u16(p + 30);
+    const commentLen = u16(p + 32);
+    const localOff = u32(p + 42);
+    const name = decoder.decode(buf.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + commentLen;
+
+    // 跳过目录、macOS 资源叉等杂项
+    if(name.endsWith('/')) continue;
+    const base = name.split('/').pop();
+    if(!base || base.startsWith('._') || name.startsWith('__MACOSX/')) continue;
+
+    // 数据起点以本地头为准（本地头的 name/extra 长度可能与中央目录不同）
+    const dataStart = localOff + 30 + u16(localOff + 26) + u16(localOff + 28);
+    const data = buf.subarray(dataStart, dataStart + compSize);
+
+    let raw;
+    if(method === 0){
+      raw = data;
+    } else if(method === 8){
+      const ds = new DecompressionStream('deflate-raw');
+      raw = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer());
+    } else {
+      continue; // 不支持的压缩方式
+    }
+    out.push(new File([raw], base));
+  }
+  return out;
+}
+
+async function handleFileImport(e){
+  let files = Array.from(e.target.files);
+  e.target.value = "";
+  if(!files.length) return;
+
+  // 展开 zip：读取其中的 .ylp 和图片
+  const zipFiles = files.filter(f => /\.zip$/i.test(f.name));
+  files = files.filter(f => !/\.zip$/i.test(f.name));
+  const fallbackMap = {};   // ylp 文件名(去扩展名) -> 兜底封面 File
+  for(const z of zipFiles){
+    try{
+      const extracted = await unzipFiles(z);
+      files = files.concat(extracted);
+      // zip 内的固定名封面（Cover.png / cover.png / 封面.png / folder.png 等）
+      const zYlps = extracted.filter(f => /\.(ylp|json)$/i.test(f.name) || f.type === 'application/json');
+      const zCovers = extracted.filter(f => /\.(png|jpe?g|webp)$/i.test(f.name) && /^(cover|folder|front|封面|default)/i.test(baseName(f.name)));
+      if(zYlps.length && zCovers.length){
+        // 优先配给 zip 内没有同名封面的 ylp（通常 zip 里只有一个 ylp）
+        const noSameName = zYlps.find(y =>
+          !extracted.some(img => /\.(png|jpe?g|webp)$/i.test(img.name) && baseName(img.name) === baseName(y.name))
+        );
+        const target = noSameName || zYlps[0];
+        fallbackMap[baseName(target.name)] = zCovers[0];
+      }
+    } catch(err){
+      showToast('zip 解压失败：' + z.name);
+    }
+  }
+
+  const ylpFiles = files.filter(f => /\.(ylp|json)$/i.test(f.name) || f.type === 'application/json');
+  const imgFiles = files.filter(f => /\.(png|jpe?g|webp)$/i.test(f.name) || f.type.startsWith('image/'));
+
+  if(!ylpFiles.length){
+    showToast('请选择 .ylp 或 .zip 文件');
+    return;
+  }
+
+  // 先把同批的图片读成 dataURL，按文件名（去扩展名）建立封面映射
+  const coverMap = {};         // 同名图片：Fan_of_a_Fan.ylp ↔ Fan_of_a_Fan.png
+  const fallbackCoverMap = {}; // 兜底封面：Cover.png 等固定名封面
+  let pending = imgFiles.length;
+  const startImport = () => importYlpFiles(ylpFiles, coverMap, fallbackCoverMap);
+
+  if(!pending){ startImport(); }
+  imgFiles.forEach(img => {
+    const reader = new FileReader();
+    const done = () => { if(--pending === 0) startImport(); };
+    reader.onload = (ev) => {
+      const key = baseName(img.name);
+      coverMap[key] = ev.target.result;
+      // 若该图被某 ylp 指定为兜底封面，同步写入
+      for(const ylpKey in fallbackMap){
+        if(fallbackMap[ylpKey] === img) fallbackCoverMap[ylpKey] = ev.target.result;
+      }
+      done();
+    };
+    reader.onerror = done;
+    reader.readAsDataURL(img);
+  });
+}
+
+function importYlpFiles(ylpFiles, coverMap, fallbackCoverMap){
+  let loaded = 0;
+  let totalAdded = 0;
+  ylpFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try{
+        const data = JSON.parse(ev.target.result);
+        let newRecords = [];
+        if(Array.isArray(data)){
+          newRecords = data;
+        } else if(data.records || data.vinyls || data.collection){
+          newRecords = data.records || data.vinyls || data.collection;
+        } else {
+          newRecords = [data];
+        }
+        // 封面优先级：ylp 内嵌 cover > 同名图片（Fan_of_a_Fan.ylp ↔ Fan_of_a_Fan.png）> zip 内 Cover.png 等兜底封面
+        const localCover = coverMap[baseName(file.name)] || (fallbackCoverMap && fallbackCoverMap[baseName(file.name)]) || '';
+        newRecords = newRecords.map(r => {
+          const sides = r.sides || {};
+          const sideA = sides.A || sides.a || {};
+          const sideB = sides.B || sides.b || {};
+          const rawA = r.side_a || r.sideA || r.tracks_a || r.a_side || sideA.tracks || [];
+          const rawB = r.side_b || r.sideB || r.tracks_b || r.b_side || sideB.tracks || [];
+          return {
+            title: r.title || r.name || '未命名',
+            owner: r.owner || r.artist || r.producer || '未知',
+            created_at: r.created_at || r.created || r.date || r.year || '',
+            cover: r.cover || r.image || localCover,
+            side_a: (Array.isArray(rawA) ? rawA : []).map(normalizeTrack).filter(Boolean),
+            side_b: (Array.isArray(rawB) ? rawB : []).map(normalizeTrack).filter(Boolean)
+          };
+        });
+        // 去重：已存在相同标题 + 制作人的唱片跳过，避免重复导入
+        const fresh = newRecords.filter(r =>
+          !state.records.some(x => x.title === r.title && x.owner === r.owner)
+        );
+        state.records.push(...fresh);
+        totalAdded += fresh.length;
+        loaded++;
+        if(loaded === ylpFiles.length){
+          saveRecords();
+          showToast(totalAdded ? `已导入 ${totalAdded} 张唱片` : '没有新唱片（重复项已跳过）');
+          render();
+        }
+      } catch(err){
+        showToast('文件格式错误，请导入有效的 .ylp 文件');
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
+// Drag & drop
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  if(state.view !== 'collection') return;
+  const files = Array.from(e.dataTransfer.files).filter(f => /\.(ylp|json|zip|png|jpe?g|webp)$/i.test(f.name) || f.type === 'application/json' || f.type.startsWith('image/'));
+  if(files.length){
+    const dt = new DataTransfer();
+    files.forEach(f => dt.items.add(f));
+    const input = document.getElementById('fileInput');
+    if(input){
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change'));
+    }
+  }
+});
+
+// ========== Detail Modal ==========
+function showDetail(idx){
+  const rec = state.records[idx];
+  if(!rec) return;
+
+  document.getElementById('detailImg').src = rec.cover || '';
+  document.getElementById('detailImg').style.display = rec.cover ? 'block' : 'none';
+  document.getElementById('detailDiscLabel').style.background = stringToColor(rec.owner);
+
+  const sideA = rec.side_a || [];
+  const sideB = rec.side_b || [];
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-title">${esc(rec.title)}</div>
+    <div class="detail-owner">制作人：${esc(rec.owner)}</div>
+    <div class="detail-date">${rec.created_at ? '创建时间：' + esc(formatDate(rec.created_at)) : ''}</div>
+
+    ${sideA.length ? `
+      <div class="side-section">
+        <div class="side-label">A 面</div>
+        <ul class="track-list">
+          ${sideA.map((t, i) => trackItemHTML(t, i)).join('')}
+        </ul>
+      </div>
+    ` : ''}
+
+    ${sideB.length ? `
+      <div class="side-section side-b">
+        <div class="side-label">B 面</div>
+        <ul class="track-list">
+          ${sideB.map((t, i) => trackItemHTML(t, i)).join('')}
+        </ul>
+      </div>
+    ` : ''}
+
+    ${state.view === 'collection' ? `
+      <div class="detail-footer">
+        <button class="modal-btn modal-btn-danger" onclick="confirmRemove(${idx}, this)">下架这张唱片</button>
+      </div>
+    ` : ''}
+  `;
+  document.getElementById('detailModal').classList.add('active');
+}
+
+// ========== Remove (下架) ==========
+let removeTimer = null;
+function confirmRemove(idx, btn){
+  if(btn.dataset.confirming !== '1'){
+    btn.dataset.confirming = '1';
+    btn.textContent = '再点一次确认下架';
+    clearTimeout(removeTimer);
+    removeTimer = setTimeout(() => {
+      btn.dataset.confirming = '0';
+      btn.textContent = '下架这张唱片';
+    }, 3000);
+    return;
+  }
+  const rec = state.records[idx];
+  if(!rec) return;
+  state.records.splice(idx, 1);
+  saveRecords();
+  closeModalDirect('detailModal');
+  showToast('已下架「' + rec.title + '」');
+  render();
+}
+
+// ========== Utils ==========
+// .ylp 的曲目是对象 {name, artist, duration(ms)}，兼容纯字符串格式
+function normalizeTrack(t){
+  if(typeof t === 'string') return t ? { name: t, artist: '', duration: null } : null;
+  if(t && typeof t === 'object'){
+    const name = t.name || t.title || '';
+    if(!name) return null;
+    return {
+      name: name,
+      artist: t.artist || '',
+      duration: (typeof t.duration === 'number') ? t.duration : (t.duration || null)
+    };
+  }
+  return null;
+}
+
+function formatDuration(d){
+  if(d === null || d === undefined || d === '') return '';
+  if(typeof d === 'string') return d;
+  const total = Math.max(0, Math.round(d / 1000));
+  return Math.floor(total / 60) + ':' + String(total % 60).padStart(2, '0');
+}
+
+function trackItemHTML(t, i){
+  const track = normalizeTrack(t);
+  if(!track) return '';
+  return `
+    <li class="track-item">
+      <span class="track-number">${String(i+1).padStart(2,'0')}</span>
+      <span class="track-name">${esc(track.name)}${track.artist ? `<span class="track-artist">${esc(track.artist)}</span>` : ''}</span>
+      ${track.duration ? `<span class="track-duration">${esc(formatDuration(track.duration))}</span>` : ''}
+    </li>
+  `;
+}
+
+function generateKey(type){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let key = 'ROOM-' + type + '-';
+  for(let i=0; i<6; i++) key += chars[Math.floor(Math.random()*chars.length)];
+  return key;
+}
+
+// HTML 转义：导入的 .ylp 内容不可信，插入 innerHTML 前必须转义
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function maskKey(key){
+  if(!key) return '';
+  if(key.length <= 10) return key;
+  return key.slice(0, 6) + '****' + key.slice(-4);
+}
+
+function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('已复制到剪贴板');
+    }).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+function fallbackCopy(text){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('已复制到剪贴板');
+  }catch(e){
+    showToast('复制失败，请手动复制');
+  }
+}
+
+function formatDate(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr);
+  if(isNaN(d)) return dateStr;
+  return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+}
+
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function closeModal(e, id){
+  if(e.target === document.getElementById(id)){
+    document.getElementById(id).classList.remove('active');
+  }
+}
+function closeModalDirect(id){
+  document.getElementById(id).classList.remove('active');
+}
+
+function stringToColor(str){
+  if(!str) return '#e7e2d8';
+  let hash = 0;
+  for(let i=0; i<str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash % 360);
+  return `hsl(${hue}, 35%, 75%)`;
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+  }
+});
+
+// Init
+init();
+</script>
+</body>
+</html>
